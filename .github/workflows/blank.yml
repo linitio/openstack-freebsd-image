@@ -4,8 +4,14 @@ env:
   VERSION: ${{ github.ref_name }}
 
 # Controls when the workflow will run
-on: [push]
-# Allows you to run this workflow manually from the Actions tab
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    tags:
+    - '*'
+  
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -24,3 +30,41 @@ jobs:
         run: |
           sudo chmod +x build.sh
           sudo ./build.sh
+          
+      # Converting image
+      - name: Converting image to QCOW2 format
+        run: |
+          sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${{ env.VERSION }}-amd64.qcow2
+          sudo md5sum freebsd-${{ env.VERSION }}-amd64.qcow2 > md5.txt
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Amazon Linux 2 version ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload image to release asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: freebsd-${{ env.VERSION }}-amd64.qcow2
+          asset_name: freebsd-${{ env.VERSION }}-amd64.qcow2
+          asset_content_type: application/octet-stream
+
+      - name: Add md5.txt file
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: md5.txt
+          asset_name: md5.txt
+          asset_content_type: text/plain
