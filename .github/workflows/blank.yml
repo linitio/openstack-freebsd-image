@@ -22,4 +22,6 @@ jobs:
       # Run building script
       - name: Run build.sh
         run: |
+          pwd
+          ls -al
           sudo ./build.sh
