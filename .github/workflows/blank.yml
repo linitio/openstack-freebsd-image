@@ -22,6 +22,5 @@ jobs:
       # Run building script
       - name: Run build.sh
         run: |
-          pwd
-          ls -al
+          sudo chmod +x build.sh
           sudo ./build.sh
