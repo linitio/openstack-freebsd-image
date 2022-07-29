@@ -1,7 +1,7 @@
 # This is a basic workflow to help you get started with Actions
 name: CI
 env:
-  VERSION: $(git describe --tags)
+  VERSION: ${GITHUB_REF##*/}
 
 # Controls when the workflow will run
 on: [ push ]
@@ -28,6 +28,7 @@ jobs:
         run: |
           sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${GITHUB_REF##*/}-amd64.qcow2
           sudo md5sum freebsd-${GITHUB_REF##*/}-amd64.qcow2 > md5.txt
+          sudo echo ${VERSION}
       
       - name: Create Release
         id: create_release
@@ -47,8 +48,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: freebsd-${GITHUB_REF}-amd64.qcow2
-          asset_name: freebsd-${GITHUB_REF}-amd64.qcow2
+          asset_path: freebsd-${GITHUB_REF##*/}-amd64.qcow2
+          asset_name: freebsd-${GITHUB_REF##*/}-amd64.qcow2
           asset_content_type: application/octet-stream
 
       - name: Add md5.txt file
