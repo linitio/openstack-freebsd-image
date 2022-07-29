@@ -26,4 +26,4 @@ jobs:
       # Run building script
       - name: Run build.sh
         run: |
-          echo ${GITHUB_REF}
+          echo ${GITHUB_REF_NAME}
