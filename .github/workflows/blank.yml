@@ -1,29 +1,55 @@
 # This is a basic workflow to help you get started with Actions
 name: CI
 env:
-  VERSION: ${GITHUB_REF_NAME}
+  VERSION: $(git describe --tags)
 
 # Controls when the workflow will run
 on: [ push ]
-  # Triggers the workflow on push or pull request events but only for the main branch
-
-  
-  # Allows you to run this workflow manually from the Actions tab
-  # workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: self-hosted
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       # Run building script
       - name: Run build.sh
         run: |
-          echo ${VERSION}
+          sudo chmod +x build.sh
+          sudo ./build.sh
+          
+      # Converting image
+      - name: Converting image to QCOW2 format
+        run: |
+          sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${GITHUB_REF}-amd64.qcow2
+          sudo md5sum freebsd-${GITHUB_REF}-amd64.qcow2 > md5.txt
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${GITHUB_REF}
+          release_name: Amazon Linux 2 version ${GITHUB_REF}
+          draft: false
+          prerelease: false
+
+      - name: Upload image to release asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: freebsd-${GITHUB_REF}-amd64.qcow2
+          asset_name: freebsd-${GITHUB_REF}-amd64.qcow2
+          asset_content_type: application/octet-stream
+
+      - name: Add md5.txt file
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: md5.txt
+          asset_name: md5.txt
+          asset_content_type: text/plain
