@@ -5,7 +5,7 @@ ref="${3:-main}"
 debug=$4
 install_media="${install_media:-http}"
 
-set -eu
+set -eux
 root_fs="${root_fs:-zfs}"  # ufs or zfs
 
 function build {
