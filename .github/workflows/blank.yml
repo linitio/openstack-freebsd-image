@@ -26,4 +26,4 @@ jobs:
       # Run building script
       - name: Run build.sh
         run: |
-          echo ${{ env.VERSION }}
+          echo ${GITHUB_REF}
