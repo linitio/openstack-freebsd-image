@@ -21,5 +21,5 @@ jobs:
       # Run building script
       - name: Run build.sh
         run: |
-          sudo echo ${VERSION}
+          sudo echo ${GITHUB_REF##*/}
           
