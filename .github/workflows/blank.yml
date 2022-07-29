@@ -1,7 +1,5 @@
 # This is a basic workflow to help you get started with Actions
 name: CI
-env:
-  VERSION: $(git describe --tags)
 
 # Controls when the workflow will run
 on: [ push ]
@@ -27,8 +25,8 @@ jobs:
       # Converting image
       - name: Converting image to QCOW2 format
         run: |
-          sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${GITHUB_REF}-amd64.qcow2
-          sudo md5sum freebsd-${GITHUB_REF}-amd64.qcow2 > md5.txt
+          sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${GITHUB_REF_NAME}-amd64.qcow2
+          sudo md5sum freebsd-${GITHUB_REF_NAME}-amd64.qcow2 > md5.txt
       
       - name: Create Release
         id: create_release
@@ -36,8 +34,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${GITHUB_REF}
-          release_name: Amazon Linux 2 version ${GITHUB_REF}
+          tag_name: ${GITHUB_REF_NAME}
+          release_name: Amazon Linux 2 version ${GITHUB_REF_NAME}
           draft: false
           prerelease: false
 
@@ -48,8 +46,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: freebsd-${GITHUB_REF}-amd64.qcow2
-          asset_name: freebsd-${GITHUB_REF}-amd64.qcow2
+          asset_path: freebsd-${GITHUB_REF_NAME}-amd64.qcow2
+          asset_name: freebsd-${GITHUB_REF_NAME}-amd64.qcow2
           asset_content_type: application/octet-stream
 
       - name: Add md5.txt file
