@@ -16,48 +16,9 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
-      # Run building script
-      - name: Run build.sh
-        run: |
-          sudo chmod +x build.sh
-          sudo ./build.sh
-          
-      # Converting image
-      - name: Converting image to QCOW2 format
-        run: |
-          sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${GITHUB_REF##*/}-amd64.qcow2
-          sudo md5sum freebsd-${GITHUB_REF##*/}-amd64.qcow2 > md5.txt
-          sudo echo ${GITHUB_REF_NAME}
       
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${GITHUB_REF##*/}
-          release_name: Amazon Linux 2 version ${GITHUB_REF##*/}
-          draft: false
-          prerelease: false
-
-      - name: Upload image to release asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: freebsd-${GITHUB_REF##*/}-amd64.qcow2
-          asset_name: freebsd-${GITHUB_REF##*/}-amd64.qcow2
-          asset_content_type: application/octet-stream
-
-      - name: Add md5.txt file
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: md5.txt
-          asset_name: md5.txt
-          asset_content_type: text/plain
+      - name: Get tag name
+        run: echo "REF_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
+      
+      - name: Debug
+        run: echo ${{ env.REF_NAME }}
