@@ -28,7 +28,7 @@ jobs:
         run: |
           sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${GITHUB_REF##*/}-amd64.qcow2
           sudo md5sum freebsd-${GITHUB_REF##*/}-amd64.qcow2 > md5.txt
-          sudo echo ${VERSION}
+          sudo echo ${GITHUB_REF_NAME}
       
       - name: Create Release
         id: create_release
