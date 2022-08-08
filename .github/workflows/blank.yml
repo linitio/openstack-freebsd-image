@@ -22,3 +22,47 @@ jobs:
       
       - name: Debug
         run: echo ${{ env.REF_NAME }}
+      
+      # Run building script
+      - name: Run build.sh
+        run: |
+          sudo chmod +x build.sh
+          sudo ./build.sh
+          
+      # Converting image
+      - name: Converting image to QCOW2 format
+        run: |
+          sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${GITHUB_REF##*/}-amd64.qcow2
+          sudo md5sum freebsd-${{ env.REF_NAME }}-amd64.qcow2 > md5.txt
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.REF_NAME }}
+          release_name: FreeBSD version ${{ env.REF_NAME }}
+          draft: false
+          prerelease: false
+
+      - name: Upload image to release asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: freebsd-${{ env.REF_NAME }}-amd64.qcow2
+          asset_name: freebsd-${{ env.REF_NAME }}-amd64.qcow2
+          asset_content_type: application/octet-stream
+
+      - name: Add md5.txt file
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: md5.txt
+          asset_name: md5.txt
+          asset_content_type: text/plain
