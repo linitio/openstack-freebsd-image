@@ -32,7 +32,7 @@ jobs:
       # Converting image
       - name: Converting image to QCOW2 format
         run: |
-          sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${GITHUB_REF##*/}-amd64.qcow2
+          sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${{ env.REF_NAME }}-amd64.qcow2
           sudo md5sum freebsd-${{ env.REF_NAME }}-amd64.qcow2 > md5.txt
       
       - name: Create Release
