@@ -111,6 +111,7 @@ touch /etc/rc.conf
    mode: auto
    devices:
       - /dev/vtbd0p4
+      - /dev/da0p4
       - /
 ' >> /mnt/etc/cloud/cloud.cfg
     fi
