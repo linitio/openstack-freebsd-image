@@ -24,7 +24,7 @@ jobs:
         envs: 'GITHUB_TOKEN REF_NAME'
         usesh: true
         prepare: |
-          pkg install -y bash
+          pkg install -y bash qemu-devel
         run: |
           chmod +x build.sh
           ./build.sh ${{ env.REF_NAME }}
