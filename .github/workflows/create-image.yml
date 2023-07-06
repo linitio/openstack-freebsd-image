@@ -23,6 +23,8 @@ jobs:
       with:
         envs: 'GITHUB_TOKEN REF_NAME'
         usesh: true
+        prepare: |
+          pkg install -y bash
         run: |
           chmod +x build.sh
           ./build.sh ${{ env.REF_NAME }}
