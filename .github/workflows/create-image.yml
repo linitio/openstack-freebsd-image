@@ -18,33 +18,11 @@ jobs:
     - name: Get tag name
       run: echo "REF_NAME=$(echo ${GITHUB_REF##*/} | tr / -)" >> $GITHUB_ENV
     - uses: actions/checkout@v3
-    - name: Test in FreeBSD
-      id: test
+    - name: Run build.sh
       uses: vmactions/freebsd-vm@v0
       with:
         envs: 'GITHUB_TOKEN REF_NAME'
         usesh: true
-        prepare: |
-          pkg install -y curl
-
         run: |
-          pwd
-          ls -lah
-          whoami
-          env
-          freebsd-version
-
-
-  
-  
-  
-  
-
-
-
-
-
-
-
-
-
+          sudo chmod +x build.sh
+          sudo ./build.sh ${{ env.REF_NAME }}
