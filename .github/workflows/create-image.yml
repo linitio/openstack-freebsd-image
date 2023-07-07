@@ -28,3 +28,5 @@ jobs:
         run: |
           chmod +x build.sh
           ./build.sh 13.2
+          qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-13.2-amd64.qcow2
+          md5sum freebsd-13.2-amd64.qcow2 > md5.txt
