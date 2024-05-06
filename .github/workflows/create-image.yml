@@ -45,7 +45,7 @@ jobs:
           sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${{ env.REF_NAME }}-amd64.qcow2
           sudo md5sum freebsd-${{ env.REF_NAME }}-amd64.qcow2 > md5.txt
 
-       - name: Uploading image in object storage
+      - name: Uploading image in object storage
         run: |
           echo "Uploading image in object storage"
           minio-client alias set ${{ env.S3_ALIAS }} ${{ env.S3_ENDPOINT }} ${{ env.ACCESS_KEY }} ${{ env.SECRET_KEY }}
