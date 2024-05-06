@@ -51,12 +51,12 @@ jobs:
         run: |
           echo "Uploading image in object storage"
           minio-client alias set ${{ env.S3_ALIAS }} ${{ env.S3_ENDPOINT }} ${{ env.ACCESS_KEY }} ${{ env.SECRET_KEY }}
-          minio-client cp freebsd-${{ env.REF_NAME }}-amd64.qcow2 ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/freebsd-${{ env.REF_NAME }}-amd64.qcow2
+          minio-client cp freebsd-${{ env.REF_NAME }}-amd64.qcow2 ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/freebsd-latest-amd64.qcow2
           minio-client cp md5.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/md5.txt
           minio-client cp sha1.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha1.txt
           minio-client cp sha256.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha256.txt
-          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/freebsd-${{ env.REF_NAME }}-amd64.qcow2 ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.REF_NAME }}/freebsd-${{ env.REF_NAME }}-amd64.qcow2
-          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/md5.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.VERSION }}/md5.txt
-          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha1.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.VERSION }}/sha1.txt
-          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha256.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.VERSION }}/sha256.txt
+          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/freebsd-latest-amd64.qcow2 ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.REF_NAME }}/freebsd-${{ env.REF_NAME }}-amd64.qcow2
+          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/md5.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.REF_NAME }}/md5.txt
+          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha1.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.REF_NAME }}/sha1.txt
+          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha256.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.REF_NAME }}/sha256.txt
 
