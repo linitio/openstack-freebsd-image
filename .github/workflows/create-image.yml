@@ -53,7 +53,7 @@ jobs:
           minio-client cp md5.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/md5.txt
           minio-client cp sha1.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha1.txt
           minio-client cp sha256.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha256.txt
-          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/freebsd-${{ env.REF_NAME }}-amd64.qcow2 ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/i${{ env.REF_NAME }}/freebsd-${{ env.REF_NAME }}-amd64.qcow2
+          minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/freebsd-${{ env.REF_NAME }}-amd64.qcow2 ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.REF_NAME }}/freebsd-${{ env.REF_NAME }}-amd64.qcow2
           minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/md5.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.VERSION }}/md5.txt
           minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha1.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.VERSION }}/sha1.txt
           minio-client cp ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/latest/sha256.txt ${{ env.S3_ALIAS }}/${{ env.S3_BUCKET }}/${{ env.VERSION }}/sha256.txt
