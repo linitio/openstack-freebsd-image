@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 version="${1:-13.0}"
 repo="${2:-canonical/cloud-init}"
 ref="${3:-main}"
@@ -38,12 +39,12 @@ function build {
 
 
     if [ ${root_fs} = "zfs" ]; then
-        zpool create -o altroot=/mnt zroot ${md_dev}p4
-        zfs set compress=on  zroot
-        zfs create -o mountpoint=none                                  zroot/ROOT
-        zfs create -o mountpoint=/ -o canmount=noauto                  zroot/ROOT/default
-        mount -t zfs zroot/ROOT/default /mnt
-        zpool set bootfs=zroot/ROOT/default zroot
+        zpool create -o altroot=/mnt zroot-mnt ${md_dev}p4
+        zfs set compress=on  zroot-mnt
+        zfs create -o mountpoint=none                                  zroot-mnt/ROOT
+        zfs create -o mountpoint=/ -o canmount=noauto                  zroot-mnt/ROOT/default
+        mount -t zfs zroot-mnt/ROOT/default /mnt
+        zpool set bootfs=zroot-mnt/ROOT/default zroot-mnt
     else
         newfs -U -L FreeBSD /dev/${md_dev}p4
         mount /dev/${md_dev}p4 /mnt
@@ -103,9 +104,10 @@ touch /etc/rc.conf
 
     if [ ${root_fs} = "zfs" ]; then
         echo 'zfs_load="YES"' >> /mnt/boot/loader.conf
-        echo 'vfs.root.mountfrom="zfs:zroot/ROOT/default"' >> /mnt/boot/loader.conf
+        echo 'vfs.root.mountfrom="zfs:zroot-mnt/ROOT/default"' >> /mnt/boot/loader.conf
         echo 'zfs_enable="YES"' >> /mnt/etc/rc.conf
 
+        mkdir -p /mnt/etc/cloud
 
         echo 'growpart:
    mode: auto
@@ -121,8 +123,8 @@ touch /etc/rc.conf
         ls /mnt/sbin
         ls /mnt/sbin/init
         zfs umount /mnt
-        zfs umount /mnt/zroot
-        zpool export zroot
+        zfs umount /mnt/zroot-mnt
+        zpool export zroot-mnt
     else
         umount /dev/${md_dev}p4
     fi
