@@ -44,8 +44,8 @@ jobs:
         run: |
           sudo qemu-img convert -f raw -O qcow2 -c -S 4k final.raw freebsd-${{ env.REF_NAME }}-amd64.qcow2
           sudo md5sum freebsd-${{ env.REF_NAME }}-amd64.qcow2 > md5.txt
-          sudo sha1sum -b freebsd-${{ env.REF_NAME }}-amd64.qcow2 > md5.txt
-          sudo sha256sum -b freebsd-${{ env.REF_NAME }}-amd64.qcow2 > md5.txt
+          sudo sha1sum -b freebsd-${{ env.REF_NAME }}-amd64.qcow2 > sha1.txt
+          sudo sha256sum -b freebsd-${{ env.REF_NAME }}-amd64.qcow2 > sha256.txt
 
       - name: Uploading image in object storage
         run: |
