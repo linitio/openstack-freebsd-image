@@ -107,6 +107,7 @@ touch /etc/rc.conf
         echo 'vfs.root.mountfrom="zfs:zroot-mnt/ROOT/default"' >> /mnt/boot/loader.conf
         echo 'zfs_enable="YES"' >> /mnt/etc/rc.conf
 
+        mkdir -p /mnt/etc/cloud
 
         echo 'growpart:
    mode: auto
