@@ -46,12 +46,12 @@ function build {
 
 
     if [ ${root_fs} = "zfs" ]; then
-        zpool create -o altroot=/mnt zroot ${md_dev}p4
-        zfs set compress=on  zroot
-        zfs create -o mountpoint=none                                  zroot/ROOT
-        zfs create -o mountpoint=/ -o canmount=noauto                  zroot/ROOT/default
-        mount -t zfs zroot/ROOT/default /mnt
-        zpool set bootfs=zroot/ROOT/default zroot
+        zpool create -o altroot=/mnt zroot-mnt ${md_dev}p4
+        zfs set compress=on  zroot-mnt
+        zfs create -o mountpoint=none                                  zroot-mnt/ROOT
+        zfs create -o mountpoint=/ -o canmount=noauto                  zroot-mnt/ROOT/default
+        mount -t zfs zroot-mnt/ROOT/default /mnt
+        zpool set bootfs=zroot-mnt/ROOT/default zroot
     else
         newfs -U -L FreeBSD /dev/${md_dev}p4
         tunefs -p /dev/${md_dev}p4
@@ -137,7 +137,7 @@ echo \"ifconfig_\${ifdev}_ipv6=\\\"DHCP\\\"\" >> /etc/rc.conf
 
     if [ ${root_fs} = "zfs" ]; then
         echo 'zfs_load="YES"' >> /mnt/boot/loader.conf
-        echo 'vfs.root.mountfrom="zfs:zroot/ROOT/default"' >> /mnt/boot/loader.conf
+        echo 'vfs.root.mountfrom="zfs:zroot-mnt/ROOT/default"' >> /mnt/boot/loader.conf
         echo 'zfs_enable="YES"' >> /mnt/etc/rc.conf
 
         # make sure the directory exists before creating cloud.cfg
@@ -155,8 +155,8 @@ echo \"ifconfig_\${ifdev}_ipv6=\\\"DHCP\\\"\" >> /etc/rc.conf
         ls /mnt/sbin
         ls /mnt/sbin/init
         zfs umount /mnt
-        zfs umount /mnt/zroot
-        zpool export zroot
+        zfs umount /mnt/zroot-mnt
+        zpool export zroot-mnt
     else
         umount /dev/${md_dev}p4
     fi
