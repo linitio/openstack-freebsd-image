@@ -51,7 +51,7 @@ function build {
         zfs create -o mountpoint=none                                  zroot-mnt/ROOT
         zfs create -o mountpoint=/ -o canmount=noauto                  zroot-mnt/ROOT/default
         mount -t zfs zroot-mnt/ROOT/default /mnt
-        zpool set bootfs=zroot-mnt/ROOT/default zroot
+        zpool set bootfs=zroot-mnt/ROOT/default zroot-mnt
     else
         newfs -U -L FreeBSD /dev/${md_dev}p4
         tunefs -p /dev/${md_dev}p4
