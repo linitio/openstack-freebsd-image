@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
-
-version="${1:-13.0}"
+version="${1:-14.2}"
 repo="${2:-canonical/cloud-init}"
 ref="${3:-main}"
 debug=$4
 install_media="${install_media:-http}"
+requisite_pkgs="curl"
+
+pkg info --quiet ${requisite_pkgs}
+if [ $? != 0 ]; then
+    echo "Requisite packages are missing, install following packages:" >&2
+    echo "${requisite_pkgs}" | sed -e 's|^|\t|' -e 's| |\n\t|g' >&2
+    exit 1
+fi
 
 set -eux
 root_fs="${root_fs:-zfs}"  # ufs or zfs
@@ -23,12 +30,12 @@ function build {
         gptboot=/boot/gptboot
     fi
 
-    qemu-img create final.raw 3G
+    dd if=/dev/zero of=final.raw bs=1148576 count=3000
     md_dev=$(mdconfig -a -t vnode -f final.raw)
     gpart create -s gpt ${md_dev}
     gpart add -t freebsd-boot -s 1024 ${md_dev}
     gpart bootcode -b /boot/pmbr -p ${gptboot} -i 1 ${md_dev}
-    gpart add -t efi -s 40M ${md_dev}
+    gpart add -t efi -s 128M ${md_dev}
     gpart add -s 1G -l swapfs -t freebsd-swap ${md_dev}
     gpart add -t freebsd-${root_fs} -l rootfs ${md_dev}
     newfs_msdos -F 32 -c 1 /dev/${md_dev}p2
@@ -39,14 +46,15 @@ function build {
 
 
     if [ ${root_fs} = "zfs" ]; then
-        zpool create -o altroot=/mnt zroot-mnt ${md_dev}p4
-        zfs set compress=on  zroot-mnt
-        zfs create -o mountpoint=none                                  zroot-mnt/ROOT
-        zfs create -o mountpoint=/ -o canmount=noauto                  zroot-mnt/ROOT/default
-        mount -t zfs zroot-mnt/ROOT/default /mnt
-        zpool set bootfs=zroot-mnt/ROOT/default zroot-mnt
+        zpool create -o altroot=/mnt zroot ${md_dev}p4
+        zfs set compress=on  zroot
+        zfs create -o mountpoint=none                                  zroot/ROOT
+        zfs create -o mountpoint=/ -o canmount=noauto                  zroot/ROOT/default
+        mount -t zfs zroot/ROOT/default /mnt
+        zpool set bootfs=zroot/ROOT/default zroot
     else
         newfs -U -L FreeBSD /dev/${md_dev}p4
+        tunefs -p /dev/${md_dev}p4
         mount /dev/${md_dev}p4 /mnt
     fi
 
@@ -55,13 +63,36 @@ function build {
     curl -L ${BASE_URL}/kernel.txz | tar vxf - -C /mnt
     curl -L -o /mnt/tmp/cloud-init.tar.gz "https://github.com/${repo}/archive/${ref}.tar.gz"
     echo "
+PAGER=""
+freebsd-update --currently-running ${version}-RELEASE fetch --not-running-from-cron
+freebsd-update --currently-running ${version}-RELEASE install
 export ASSUME_ALWAYS_YES=YES
 cd /tmp
 pkg install -y ca_root_nss
 tar xf cloud-init.tar.gz
 cd cloud-init-*
-pkg install -y python3 qemu-guest-agent
+pkg install -y python3 qemu-guest-agent py311-setuptools net/dhcpcd
 touch /etc/rc.conf
+
+# Configure dhcpcd
+cat >>/usr/local/etc/dhcpcd.conf << DHCP_CONF
+hostname
+ia_na 1
+DHCP_CONF
+sed -i '' -e 's/^slaac private/#slaac private/' /usr/local/etc/dhcpcd.conf
+
+# Determine the network interface name dynamically
+ifdev=\$(ifconfig -l | tr -s ' ' '\n' | grep -v lo | head -1)
+if [ -z \"\$ifdev\" ]; then
+    # Default to vtnet0 if we can't determine the interface
+    ifdev=\"vtnet0\"
+fi
+
+# Configure rc.conf for dhcpcd
+echo 'dhclient_program=\"/usr/local/sbin/dhcpcd\"' >> /etc/rc.conf
+echo \"ifconfig_\${ifdev}=\\\"DHCP\\\"\" >> /etc/rc.conf
+echo \"ifconfig_\${ifdev}_ipv6=\\\"DHCP\\\"\" >> /etc/rc.conf
+
 ./tools/build-on-freebsd
 " > /mnt/tmp/cloudify.sh
 
@@ -87,10 +118,12 @@ touch /etc/rc.conf
     echo 'boot_multicons="YES"' >> /mnt/boot/loader.conf
     echo 'boot_serial="YES"' >> /mnt/boot/loader.conf
     echo 'comconsole_speed="115200"' >> /mnt/boot/loader.conf
-    echo 'autoboot_delay="1"' >> /mnt/boot/loader.conf
+    echo 'autoboot_delay="-1"' >> /mnt/boot/loader.conf
     echo 'console="comconsole,efi"' >> /mnt/boot/loader.conf
+    echo 'beastie_disable="YES"' >>/mnt/boot/loader.conf
     echo '-P' >> /mnt/boot.config
     rm -rf /mnt/tmp/*
+    echo 'clear_tmp_enable="YES"' >>/mnt/etc/rc.conf
     echo 'sshd_enable="YES"' >> /mnt/etc/rc.conf
     echo 'sendmail_enable="NONE"' >> /mnt/etc/rc.conf
 
@@ -104,16 +137,15 @@ touch /etc/rc.conf
 
     if [ ${root_fs} = "zfs" ]; then
         echo 'zfs_load="YES"' >> /mnt/boot/loader.conf
-        echo 'vfs.root.mountfrom="zfs:zroot-mnt/ROOT/default"' >> /mnt/boot/loader.conf
+        echo 'vfs.root.mountfrom="zfs:zroot/ROOT/default"' >> /mnt/boot/loader.conf
         echo 'zfs_enable="YES"' >> /mnt/etc/rc.conf
 
+        # make sure the directory exists before creating cloud.cfg
         mkdir -p /mnt/etc/cloud
-
         echo 'growpart:
    mode: auto
    devices:
       - /dev/vtbd0p4
-      - /dev/da0p4
       - /
 ' >> /mnt/etc/cloud/cloud.cfg
     fi
@@ -123,12 +155,12 @@ touch /etc/rc.conf
         ls /mnt/sbin
         ls /mnt/sbin/init
         zfs umount /mnt
-        zfs umount /mnt/zroot-mnt
-        zpool export zroot-mnt
+        zfs umount /mnt/zroot
+        zpool export zroot
     else
         umount /dev/${md_dev}p4
     fi
     mdconfig -du ${md_dev}
 }
 
-build $version
+build $versio
