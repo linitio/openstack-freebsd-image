@@ -163,4 +163,4 @@ echo \"ifconfig_\${ifdev}_ipv6=\\\"DHCP\\\"\" >> /etc/rc.conf
     mdconfig -du ${md_dev}
 }
 
-build $versio
+build $version
